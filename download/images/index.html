@@ -74,6 +74,19 @@
         .error-message {
             color: red;
         }
+
+        #preview-area {
+            margin-top: 20px;
+            border-top: 2px solid #ccc;
+            padding-top: 20px;
+        }
+
+        #preview-area img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -95,14 +108,45 @@
         </div>
         <button id="downloadButton">ダウンロード</button>
         <p id="message"></p>
+        <div id="preview-area"></div>
     </div>
 
     <script>
-        document.getElementById('downloadButton').addEventListener('click', async function() {
-            const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
+        const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
+        const downloadButton = document.getElementById('downloadButton');
+        const messageElement = document.getElementById('message');
+        const previewArea = document.getElementById('preview-area');
+
+        // チェックボックスの状態が変更されたときにプレビューを更新
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updatePreview);
+        });
+
+        // プレビュー表示関数
+        function updatePreview() {
             const selectedItems = [];
-            const messageElement = document.getElementById('message');
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedItems.push(checkbox.value);
+                }
+            });
+
+            // プレビューエリアをクリア
+            previewArea.innerHTML = '';
             
+            if (selectedItems.length > 0) {
+                const fileName = selectedItems.join(' ') + '.png';
+                previewArea.innerHTML = `<h3>プレビュー: ${fileName}</h3>`;
+                const img = document.createElement('img');
+                img.src = fileName;
+                img.alt = fileName;
+                previewArea.appendChild(img);
+            }
+        }
+
+        // ダウンロードボタンのクリックイベント
+        downloadButton.addEventListener('click', async function() {
+            const selectedItems = [];
             messageElement.textContent = "";
             messageElement.className = "";
 
@@ -129,9 +173,6 @@
 
                 if (availableFiles.includes(fileName)) {
                     // ファイルが存在する場合
-                    messageElement.textContent = `"${fileName}" をダウンロードします。`;
-                    messageElement.className = "success-message";
-                    
                     const downloadLink = document.createElement('a');
                     downloadLink.href = fileName;
                     downloadLink.download = fileName;
