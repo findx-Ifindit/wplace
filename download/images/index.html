@@ -140,16 +140,11 @@
                     document.body.removeChild(downloadLink);
                 } else {
                     // ファイルが存在しない場合
-                    messageElement.textContent = "ファイルが存在しませんでした。";
-                    messageElement.className = "error-message";
-                    
-                    setTimeout(() => {
-                        window.location.href = "/wplace/forms";
-                    }, 3000); // 3秒後にリダイレクト
+                    alert("ファイルが存在しませんでした。");
+                    window.location.href = "/wplace/forms";
                 }
             } catch (error) {
-                messageElement.textContent = "エラーが発生しました: " + error.message;
-                messageElement.className = "error-message";
+                alert("エラーが発生しました: " + error.message);
                 console.error(error);
             }
         });
