@@ -123,7 +123,7 @@
         });
 
         // プレビュー表示関数
-        function updatePreview() {
+        async function updatePreview() {
             const selectedItems = [];
             checkboxes.forEach(checkbox => {
                 if (checkbox.checked) {
@@ -131,16 +131,33 @@
                 }
             });
 
-            // プレビューエリアをクリア
             previewArea.innerHTML = '';
             
             if (selectedItems.length > 0) {
                 const fileName = selectedItems.join(' ') + '.PNG';
-                previewArea.innerHTML = `<h3>プレビュー: ${fileName}</h3>`;
-                const img = document.createElement('img');
-                img.src = fileName;
-                img.alt = fileName;
-                previewArea.appendChild(img);
+
+                try {
+                    const response = await fetch('files.json');
+                    if (!response.ok) {
+                        throw new Error('ファイルリストの取得に失敗しました。');
+                    }
+                    const availableFiles = await response.json();
+
+                    if (availableFiles.includes(fileName)) {
+                        // ファイルが存在する場合
+                        previewArea.innerHTML = `<h3>プレビュー: ${fileName}</h3>`;
+                        const img = document.createElement('img');
+                        img.src = fileName;
+                        img.alt = fileName;
+                        previewArea.appendChild(img);
+                    } else {
+                        // ファイルが存在しない場合
+                        previewArea.innerHTML = `<h3 class="error-message">プレビュー: ファイルが見つかりません</h3>`;
+                    }
+                } catch (error) {
+                    console.error('エラーが発生しました:', error);
+                    previewArea.innerHTML = `<h3 class="error-message">プレビュー: ファイルリストの読み込みに失敗しました</h3>`;
+                }
             }
         }
 
