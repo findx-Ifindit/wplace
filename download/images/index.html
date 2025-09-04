@@ -83,27 +83,25 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>画像 ダウンロード</h1>
-        <div class="checkbox-group">
-            <div class="checkbox-item">
-                <input type="checkbox" id="koukyo" name="image" value="皇居">
-                <label for="koukyo">皇居</label>
-            </div>
-            <div class="checkbox-item">
-                <input type="checkbox" id="kamo" name="image" value="カモ">
-                <label for="kamo">カモ</label>
-            </div>
-            <div class="checkbox-item">
-                <input type="checkbox" id="kokki" name="image" value="国旗">
-                <label for="kokki">国旗</label>
-            </div>
+    <h1>画像 ダウンロード</h1>
+    <div class="checkbox-group">
+        <div class="checkbox-item">
+            <input type="checkbox" id="koukyo" name="image" value="皇居">
+            <label for="koukyo">皇居</label>
         </div>
-        <button id="downloadButton">ダウンロード</button>
-        <p id="message"></p>
-        <div id="preview-area">
-            <canvas id="preview-canvas" width="16" height="16"></canvas> </div>
+        <div class="checkbox-item">
+            <input type="checkbox" id="kamo" name="image" value="カモ">
+            <label for="kamo">カモ</label>
+        </div>
+        <div class="checkbox-item">
+            <input type="checkbox" id="kokki" name="image" value="国旗">
+            <label for="kokki">国旗</label>
+        </div>
     </div>
+    <button id="downloadButton">ダウンロード</button>
+    <p id="message"></p>
+    <div id="preview-area">
+    <canvas id="preview-canvas" width="16" height="16"></canvas> </div>
 
     <script>
         const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
