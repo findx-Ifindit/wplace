@@ -1,207 +1,221 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>画像 ダウンロード</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画像 ダウンロード</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            text-align: center; /* 中央寄せのために追加 */
+        }
 
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
 
-        .checkbox-group {
-            margin-bottom: 20px;
-            text-align: left;
-            display: inline-block;
-        }
+        .checkbox-group {
+            margin-bottom: 20px;
+            text-align: left;
+            display: block; /* inline-blockから変更 */
+        }
 
-        .checkbox-item {
-            margin: 10px 0;
-            display: flex;
-            align-items: center;
-        }
+        .checkbox-item {
+            margin: 10px 0;
+            display: block; /* flexから変更 */
+            align-items: center;
+        }
 
-        label {
-            margin-left: 10px;
-            font-size: 1.1em;
-            cursor: pointer;
-        }
+        label {
+            margin-left: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+        }
 
-        button {
-            padding: 10px 20px;
-            font-size: 1em;
-            color: white;
-            background-color: #007BFF;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
 
-        button:hover {
-            background-color: #0056b3;
-        }
+        button:hover {
+            background-color: #0056b3;
+        }
 
-        #message {
-            margin-top: 15px;
-            font-weight: bold;
-        }
+        #message {
+            margin-top: 15px;
+            font-weight: bold;
+        }
 
-        .success-message {
-            color: green;
-        }
-        
-        .error-message {
-            color: red;
-        }
+        .success-message {
+            color: green;
+        }
+        
+        .error-message {
+            color: red;
+        }
 
-        #preview-area {
-            margin-top: 20px;
-            border-top: 2px solid #ccc;
-            padding-top: 20px;
-        }
+        #preview-area {
+            margin-top: 20px;
+            border-top: 2px solid #ccc;
+            padding-top: 20px;
+        }
 
-        #preview-area img {
-            width: 50%;
-            height: auto;
-            margin-top: 10px;
-            border: 1px solid #ddd;
-        }
-    </style>
+        canvas {
+            border: 1px solid #ddd;
+            image-rendering: pixelated; /* ピクセルをはっきりと表示 */
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            width: 200px; /* プレビューのサイズ */
+            height: 200px;
+        }
+    </style>
 </head>
 <body>
-    <h1>画像 ダウンロード</h1>
-    <div class="checkbox-group">
-        <div class="checkbox-item">
-            <input type="checkbox" id="koukyo" name="image" value="皇居">
-            <label for="koukyo">皇居</label>
-        </div>
-        <div class="checkbox-item">
-            <input type="checkbox" id="kamo" name="image" value="カモ">
-            <label for="kamo">カモ</label>
-        </div>
-        <div class="checkbox-item">
-            <input type="checkbox" id="kokki" name="image" value="国旗">
-            <label for="kokki">国旗</label>
-        </div>
-    </div>
-    <button id="downloadButton">ダウンロード</button>
-    <p id="message"></p>
-    <div id="preview-area"></div>
+    <div class="container">
+        <h1>画像 ダウンロード</h1>
+        <div class="checkbox-group">
+            <div class="checkbox-item">
+                <input type="checkbox" id="koukyo" name="image" value="皇居">
+                <label for="koukyo">皇居</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="kamo" name="image" value="カモ">
+                <label for="kamo">カモ</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="kokki" name="image" value="国旗">
+                <label for="kokki">国旗</label>
+            </div>
+        </div>
+        <button id="downloadButton">ダウンロード</button>
+        <p id="message"></p>
+        <div id="preview-area">
+            <canvas id="preview-canvas" width="16" height="16"></canvas> </div>
+    </div>
 
-    <script>
-        const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
-        const downloadButton = document.getElementById('downloadButton');
-        const messageElement = document.getElementById('message');
-        const container = document.querySelector('.container');
-        const previewArea = document.getElementById('preview-area');
-        let initialContainerHeight = 0;
+    <script>
+        const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
+        const downloadButton = document.getElementById('downloadButton');
+        const messageElement = document.getElementById('message');
+        const container = document.querySelector('.container');
+        const previewArea = document.getElementById('preview-area');
+        const canvas = document.getElementById('preview-canvas');
+        const ctx = canvas.getContext('2d');
 
-        // ページ読み込み完了後にコンテナの高さを取得
-        window.addEventListener('load', () => {
-            initialContainerHeight = container.clientHeight;
-            container.style.height = `${initialContainerHeight}px`;
-        });
+        // プレビュー表示関数
+        async function updatePreview() {
+            const selectedItems = [];
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedItems.push(checkbox.value);
+                }
+            });
 
-        // チェックボックスの状態が変更されたときにプレビューを更新
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', updatePreview);
-        });
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            previewArea.innerHTML = '';
+            
+            if (selectedItems.length > 0) {
+                const fileName = selectedItems.join(' ') + '.PNG';
 
-        // プレビュー表示関数
-        async function updatePreview() {
-            const selectedItems = [];
-            checkboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    selectedItems.push(checkbox.value);
-                }
-            });
+                try {
+                    const response = await fetch('files.json');
+                    if (!response.ok) {
+                        throw new Error('ファイルリストの取得に失敗しました。');
+                    }
+                    const availableFiles = await response.json();
 
-            previewArea.innerHTML = '';
-            
-            if (selectedItems.length > 0) {
-                const fileName = selectedItems.join(' ') + '.PNG';
+                    if (availableFiles.includes(fileName)) {
+                        previewArea.innerHTML = `<h3>プレビュー: ${fileName}</h3>`;
+                        
+                        const img = new Image();
+                        img.onload = () => {
+                            // 画像の元々のサイズに合わせてcanvasのサイズを調整
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            ctx.drawImage(img, 0, 0); // canvasに画像を描画
+                            
+                            // ピクセル表示のためにcanvasの表示サイズを拡大
+                            canvas.style.width = '200px';
+                            canvas.style.height = '200px';
+                            previewArea.appendChild(canvas);
+                        };
+                        img.onerror = () => {
+                             previewArea.innerHTML = `<h3 class="error-message">プレビュー: 画像の読み込みに失敗しました</h3>`;
+                        };
+                        img.src = fileName;
+                    } else {
+                        previewArea.innerHTML = `<h3 class="error-message">プレビュー: ファイルが見つかりません</h3>`;
+                    }
+                } catch (error) {
+                    console.error('エラーが発生しました:', error);
+                    previewArea.innerHTML = `<h3 class="error-message">プレビュー: ファイルリストの読み込みに失敗しました</h3>`;
+                }
+            }
+        }
+        
+        // ページ読み込み時に初期プレビューを設定
+        updatePreview();
 
-                try {
-                    const response = await fetch('files.json');
-                    if (!response.ok) {
-                        throw new Error('ファイルリストの取得に失敗しました。');
-                    }
-                    const availableFiles = await response.json();
+        // チェックボックスの状態が変更されたときにプレビューを更新
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updatePreview);
+        });
 
-                    if (availableFiles.includes(fileName)) {
-                        // ファイルが存在する場合
-                        previewArea.innerHTML = `<h3>プレビュー: ${fileName}</h3>`;
-                        const img = document.createElement('img');
-                        img.src = fileName;
-                        img.alt = fileName;
-                        previewArea.appendChild(img);
-                    } else {
-                        // ファイルが存在しない場合
-                        previewArea.innerHTML = `<h3 class="error-message">プレビュー: ファイルが見つかりません</h3>`;
-                    }
-                } catch (error) {
-                    console.error('エラーが発生しました:', error);
-                    previewArea.innerHTML = `<h3 class="error-message">プレビュー: ファイルリストの読み込みに失敗しました</h3>`;
-                }
-            }
-        }
+        // ダウンロードボタンのクリックイベント
+        downloadButton.addEventListener('click', async function() {
+            const selectedItems = [];
+            messageElement.textContent = "";
+            messageElement.className = "";
 
-        // ダウンロードボタンのクリックイベント
-        downloadButton.addEventListener('click', async function() {
-            const selectedItems = [];
-            messageElement.textContent = "";
-            messageElement.className = "";
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedItems.push(checkbox.value);
+                }
+            });
 
-            checkboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    selectedItems.push(checkbox.value);
-                }
-            });
+            if (selectedItems.length === 0) {
+                messageElement.textContent = "どれか一つは選択してください。";
+                messageElement.className = "error-message";
+                return;
+            }
 
-            if (selectedItems.length === 0) {
-                messageElement.textContent = "どれか一つは選択してください。";
-                messageElement.className = "error-message";
-                return;
-            }
+            const fileName = selectedItems.join(' ') + '.PNG';
 
-            const fileName = selectedItems.join(' ') + '.PNG';
+            try {
+                const response = await fetch('files.json');
+                if (!response.ok) {
+                    throw new Error('ファイルリストの取得に失敗しました。');
+                }
+                const availableFiles = await response.json();
 
-            try {
-                const response = await fetch('files.json');
-                if (!response.ok) {
-                    throw new Error('ファイルリストの取得に失敗しました。');
-                }
-                const availableFiles = await response.json();
-
-                if (availableFiles.includes(fileName)) {
-                    // ファイルが存在する場合
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = fileName;
-                    downloadLink.download = fileName;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
-                } else {
-                    // ファイルが存在しない場合
-                    alert("ファイルが存在しませんでした。");
-                    window.location.href = "/wplace/forms";
-                }
-            } catch (error) {
-                alert("エラーが発生しました: " + error.message);
-                console.error(error);
-            }
-        });
-    </script>
+                if (availableFiles.includes(fileName)) {
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = fileName;
+                    downloadLink.download = fileName;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                } else {
+                    alert("ファイルが存在しませんでした。");
+                    window.location.href = "/wplace/forms";
+                }
+            } catch (error) {
+                alert("エラーが発生しました: " + error.message);
+                console.error(error);
+            }
+        });
+    </script>
 </body>
 </html>
