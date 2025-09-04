@@ -135,7 +135,7 @@
             previewArea.innerHTML = '';
             
             if (selectedItems.length > 0) {
-                const fileName = selectedItems.join(' ') + '.png';
+                const fileName = selectedItems.join(' ') + '.PNG';
                 previewArea.innerHTML = `<h3>プレビュー: ${fileName}</h3>`;
                 const img = document.createElement('img');
                 img.src = fileName;
@@ -162,7 +162,7 @@
                 return;
             }
 
-            const fileName = selectedItems.join(' ') + '.png';
+            const fileName = selectedItems.join(' ') + '.PNG';
 
             try {
                 const response = await fetch('files.json');
