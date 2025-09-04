@@ -64,8 +64,15 @@
 
         #message {
             margin-top: 15px;
-            color: red;
             font-weight: bold;
+        }
+
+        .success-message {
+            color: green;
+        }
+        
+        .error-message {
+            color: red;
         }
     </style>
 </head>
@@ -91,10 +98,13 @@
     </div>
 
     <script>
-        document.getElementById('downloadButton').addEventListener('click', function() {
+        document.getElementById('downloadButton').addEventListener('click', async function() {
             const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
             const selectedItems = [];
             const messageElement = document.getElementById('message');
+            
+            messageElement.textContent = "";
+            messageElement.className = "";
 
             checkboxes.forEach(checkbox => {
                 if (checkbox.checked) {
@@ -104,29 +114,44 @@
 
             if (selectedItems.length === 0) {
                 messageElement.textContent = "どれか一つは選択してください。";
+                messageElement.className = "error-message";
                 return;
             }
 
-            // ファイル名を生成
             const fileName = selectedItems.join(' ') + '.png';
 
-            // ダミーのダウンロードリンクを作成
-            const downloadLink = document.createElement('a');
-            downloadLink.href = fileName;
-            downloadLink.download = fileName;
+            try {
+                const response = await fetch('files.json');
+                if (!response.ok) {
+                    throw new Error('ファイルリストの取得に失敗しました。');
+                }
+                const availableFiles = await response.json();
 
-            // リンクをDOMに追加し、クリックしてすぐ削除
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
-
-            // ファイルが見つからなかったというメッセージを表示し、リダイレクト
-            messageElement.textContent = "ファイルが存在しませんでした。";
-            
-            // 3秒後にリダイレクト
-            setTimeout(() => {
-                window.location.href = "/wplace/forms";
-            }, 3000); // 3秒後にリダイレクト
+                if (availableFiles.includes(fileName)) {
+                    // ファイルが存在する場合
+                    messageElement.textContent = `"${fileName}" をダウンロードします。`;
+                    messageElement.className = "success-message";
+                    
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = fileName;
+                    downloadLink.download = fileName;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                } else {
+                    // ファイルが存在しない場合
+                    messageElement.textContent = "ファイルが存在しませんでした。";
+                    messageElement.className = "error-message";
+                    
+                    setTimeout(() => {
+                        window.location.href = "/wplace/forms";
+                    }, 3000); // 3秒後にリダイレクト
+                }
+            } catch (error) {
+                messageElement.textContent = "エラーが発生しました: " + error.message;
+                messageElement.className = "error-message";
+                console.error(error);
+            }
         });
     </script>
 </body>
