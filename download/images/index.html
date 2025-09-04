@@ -115,7 +115,15 @@
         const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
         const downloadButton = document.getElementById('downloadButton');
         const messageElement = document.getElementById('message');
+        const container = document.querySelector('.container');
         const previewArea = document.getElementById('preview-area');
+        let initialContainerHeight = 0;
+
+        // ページ読み込み完了後にコンテナの高さを取得
+        window.addEventListener('load', () => {
+            initialContainerHeight = container.clientHeight;
+            container.style.height = `${initialContainerHeight}px`;
+        });
 
         // チェックボックスの状態が変更されたときにプレビューを更新
         checkboxes.forEach(checkbox => {
