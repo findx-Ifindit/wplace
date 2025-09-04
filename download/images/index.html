@@ -12,6 +12,15 @@
             min-height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
+            text-align: center; /* 中央寄せのために追加 */
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: inline-block; /* 中央寄せのために追加 */
         }
 
         h1 {
@@ -22,12 +31,12 @@
         .checkbox-group {
             margin-bottom: 20px;
             text-align: left;
-            display: inline-block;
+            display: block; /* inline-blockから変更 */
         }
 
         .checkbox-item {
             margin: 10px 0;
-            display: flex;
+            display: block; /* flexから変更 */
             align-items: center;
         }
 
@@ -71,33 +80,38 @@
             padding-top: 20px;
         }
 
-        #preview-area img {
-            width: 50%;
-            height: auto;
-            margin-top: 10px;
+        canvas {
             border: 1px solid #ddd;
+            image-rendering: pixelated; /* ピクセルをはっきりと表示 */
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            width: 200px; /* プレビューのサイズ */
+            height: 200px;
         }
     </style>
 </head>
 <body>
-    <h1>画像 ダウンロード</h1>
-    <div class="checkbox-group">
-        <div class="checkbox-item">
-            <input type="checkbox" id="koukyo" name="image" value="皇居">
-            <label for="koukyo">皇居</label>
+    <div class="container">
+        <h1>画像 ダウンロード</h1>
+        <div class="checkbox-group">
+            <div class="checkbox-item">
+                <input type="checkbox" id="koukyo" name="image" value="皇居">
+                <label for="koukyo">皇居</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="kamo" name="image" value="カモ">
+                <label for="kamo">カモ</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="kokki" name="image" value="国旗">
+                <label for="kokki">国旗</label>
+            </div>
         </div>
-        <div class="checkbox-item">
-            <input type="checkbox" id="kamo" name="image" value="カモ">
-            <label for="kamo">カモ</label>
-        </div>
-        <div class="checkbox-item">
-            <input type="checkbox" id="kokki" name="image" value="国旗">
-            <label for="kokki">国旗</label>
-        </div>
+        <button id="downloadButton">ダウンロード</button>
+        <p id="message"></p>
+        <div id="preview-area">
+            <canvas id="preview-canvas" width="16" height="16"></canvas> </div>
     </div>
-    <button id="downloadButton">ダウンロード</button>
-    <p id="message"></p>
-    <div id="preview-area"></div>
 
     <script>
         const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
@@ -105,18 +119,8 @@
         const messageElement = document.getElementById('message');
         const container = document.querySelector('.container');
         const previewArea = document.getElementById('preview-area');
-        let initialContainerHeight = 0;
-
-        // ページ読み込み完了後にコンテナの高さを取得
-        window.addEventListener('load', () => {
-            initialContainerHeight = container.clientHeight;
-            container.style.height = `${initialContainerHeight}px`;
-        });
-
-        // チェックボックスの状態が変更されたときにプレビューを更新
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', updatePreview);
-        });
+        const canvas = document.getElementById('preview-canvas');
+        const ctx = canvas.getContext('2d');
 
         // プレビュー表示関数
         async function updatePreview() {
@@ -127,6 +131,7 @@
                 }
             });
 
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             previewArea.innerHTML = '';
             
             if (selectedItems.length > 0) {
@@ -140,14 +145,25 @@
                     const availableFiles = await response.json();
 
                     if (availableFiles.includes(fileName)) {
-                        // ファイルが存在する場合
                         previewArea.innerHTML = `<h3>プレビュー: ${fileName}</h3>`;
-                        const img = document.createElement('img');
+                        
+                        const img = new Image();
+                        img.onload = () => {
+                            // 画像の元々のサイズに合わせてcanvasのサイズを調整
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            ctx.drawImage(img, 0, 0); // canvasに画像を描画
+                            
+                            // ピクセル表示のためにcanvasの表示サイズを拡大
+                            canvas.style.width = '200px';
+                            canvas.style.height = '200px';
+                            previewArea.appendChild(canvas);
+                        };
+                        img.onerror = () => {
+                             previewArea.innerHTML = `<h3 class="error-message">プレビュー: 画像の読み込みに失敗しました</h3>`;
+                        };
                         img.src = fileName;
-                        img.alt = fileName;
-                        previewArea.appendChild(img);
                     } else {
-                        // ファイルが存在しない場合
                         previewArea.innerHTML = `<h3 class="error-message">プレビュー: ファイルが見つかりません</h3>`;
                     }
                 } catch (error) {
@@ -156,6 +172,14 @@
                 }
             }
         }
+        
+        // ページ読み込み時に初期プレビューを設定
+        updatePreview();
+
+        // チェックボックスの状態が変更されたときにプレビューを更新
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updatePreview);
+        });
 
         // ダウンロードボタンのクリックイベント
         downloadButton.addEventListener('click', async function() {
@@ -185,7 +209,6 @@
                 const availableFiles = await response.json();
 
                 if (availableFiles.includes(fileName)) {
-                    // ファイルが存在する場合
                     const downloadLink = document.createElement('a');
                     downloadLink.href = fileName;
                     downloadLink.download = fileName;
@@ -193,7 +216,6 @@
                     downloadLink.click();
                     document.body.removeChild(downloadLink);
                 } else {
-                    // ファイルが存在しない場合
                     alert("ファイルが存在しませんでした。");
                     window.location.href = "/wplace/forms";
                 }
