@@ -1,9 +1,30 @@
 [
-  "皇居.PNG",
-  "カモ.PNG",
-  "国旗.PNG",
-  "皇居 カモ.PNG",
-  "皇居 国旗.PNG",
-  "カモ 国旗.PNG",
-  "皇居 カモ 国旗.PNG"
+{
+"fileName": "皇居.PNG",
+"coords": [10, 20]
+},
+{
+"fileName": "カモ.PNG",
+"coords": [30, 40]
+},
+{
+"fileName": "国旗.PNG",
+"coords": [50, 60]
+},
+{
+"fileName": "皇居 カモ.PNG",
+"coords": [10, 20, 30, 40]
+},
+{
+"fileName": "皇居 国旗.PNG",
+"coords": [10, 20, 50, 60]
+},
+{
+"fileName": "カモ 国旗.PNG",
+"coords": [30, 40, 50, 60]
+},
+{
+"fileName": "皇居 カモ 国旗.PNG",
+"coords": [10, 20, 30, 40, 50, 60]
+}
 ]
