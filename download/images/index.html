@@ -12,7 +12,7 @@
             min-height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
-            text-align: center; /* 中央寄せのために追加 */
+            text-align: center;
         }
 
         h1 {
@@ -23,12 +23,12 @@
         .checkbox-group {
             margin-bottom: 20px;
             text-align: center;
-            display: block; /* inline-blockから変更 */
+            display: block;
         }
 
         .checkbox-item {
             margin: 10px 0;
-            display: block; /* flexから変更 */
+            display: block;
             align-items: center;
         }
 
@@ -70,20 +70,16 @@
             margin-top: 20px;
             border-top: 2px solid #ccc;
             padding-top: 20px;
-            width:50%; /* コンテナの幅 */
-            margin-left: auto; /* 中央寄せ */
-            margin-right: auto; /* 中央寄せ */
+            width:50%;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         canvas {
             border: 1px solid #ddd;
-            /* image-renderingプロパティはそのまま残す */
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: -webkit-optimize-contrast;
-            /* ここでwidthとheightはJavaScriptで動的に設定するため、CSSからは削除または初期値のみ */
-            /* width: auto; */ 
-            /* height: auto; */
         }
 
         a{
@@ -118,7 +114,7 @@
             }
 
             p{
-                color: #454545;/*悪気はないんです…*/
+                color: #454545;
             }
 
             h3{
@@ -156,7 +152,6 @@
         const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
         const downloadButton = document.getElementById('downloadButton');
         const messageElement = document.getElementById('message');
-        const container = document.querySelector('.container');
         const previewArea = document.getElementById('preview-area');
         const canvas = document.getElementById('preview-canvas');
         const ctx = canvas.getContext('2d');
@@ -182,26 +177,25 @@
                         throw new Error('ファイルリストの取得に失敗しました。');
                     }
                     const availableFiles = await response.json();
+                    
+                    // ファイル名でオブジェクトを検索
+                    const fileData = availableFiles.find(file => file.fileName === fileName);
 
-                    if (availableFiles.includes(fileName)) {
-                        previewArea.innerHTML = `<h3>プレビュー: ${fileName}</h3>`;
+                    if (fileData) {
+                        // 座標情報を表示に追加
+                        previewArea.innerHTML = `<h3>プレビュー: ${fileName}</h3><p>座標: (${fileData.coords.join(', ')})</p>`;
                         
                         const img = new Image();
                         img.onload = () => {
-                            // 画像の元のサイズ
                             const originalWidth = img.width;
                             const originalHeight = img.height;
 
-                            // Canvasの内部描画サイズを画像の元のサイズに設定
                             canvas.width = originalWidth;
                             canvas.height = originalHeight;
 
-                            // 画像をCanvasにそのまま描画 (1:1ピクセル)
                             ctx.drawImage(img, 0, 0);
 
-                            // CSSでCanvas要素自体の表示サイズを拡大
-                            // 例: 200px x 200px のプレビューエリアに収まるように拡大
-                            const previewAreaSize = 200; // プレビューの最大サイズ
+                            const previewAreaSize = 200;
                             const ratio = Math.min(previewAreaSize / originalWidth, previewAreaSize / originalHeight);
 
                             canvas.style.width = `${originalWidth * ratio}px`;
@@ -210,9 +204,9 @@
                             previewArea.appendChild(canvas);
                         };
                         img.onerror = () => {
-                             previewArea.innerHTML = `<h3 class="error-message">プレビュー: 画像の読み込みに失敗しました</h3>`;
+                            previewArea.innerHTML = `<h3 class="error-message">プレビュー: 画像の読み込みに失敗しました</h3>`;
                         };
-                        img.src = fileName;
+                        img.src = fileData.fileName; // fileDataからファイル名を取得
                     } else {
                         previewArea.innerHTML = `<h3 class="error-message">プレビュー: ファイルが見つかりません</h3>`;
                     }
@@ -257,20 +251,45 @@
                     throw new Error('ファイルリストの取得に失敗しました。');
                 }
                 const availableFiles = await response.json();
+                
+                // ファイル名でオブジェクトを検索
+                const fileData = availableFiles.find(file => file.fileName === fileName);
 
-                if (availableFiles.includes(fileName)) {
+                if (fileData) {
                     const downloadLink = document.createElement('a');
-                    downloadLink.href = fileName;
-                    downloadLink.download = fileName;
+                    downloadLink.href = fileData.fileName; // fileDataからファイル名を取得
+                    downloadLink.download = fileData.fileName;
                     document.body.appendChild(downloadLink);
                     downloadLink.click();
                     document.body.removeChild(downloadLink);
                 } else {
-                    alert("ファイルが存在しませんでした。");
-                    window.location.href = "/wplace/forms";
+                    // alert("ファイルが存在しませんでした。");
+                    // window.location.href = "/wplace/forms";
+                    const messageBox = document.createElement('div');
+                    messageBox.textContent = "ファイルが存在しませんでした。";
+                    messageBox.style.cssText = `
+                        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                        background: white; padding: 20px; border: 1px solid #ccc; border-radius: 8px;
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000;
+                    `;
+                    document.body.appendChild(messageBox);
+                    setTimeout(() => {
+                        document.body.removeChild(messageBox);
+                    }, 3000);
                 }
             } catch (error) {
-                alert("エラーが発生しました: " + error.message);
+                // alert("エラーが発生しました: " + error.message);
+                const messageBox = document.createElement('div');
+                messageBox.textContent = "エラーが発生しました: " + error.message;
+                messageBox.style.cssText = `
+                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    background: white; padding: 20px; border: 1px solid #ccc; border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000;
+                `;
+                document.body.appendChild(messageBox);
+                setTimeout(() => {
+                    document.body.removeChild(messageBox);
+                }, 3000);
                 console.error(error);
             }
         });
