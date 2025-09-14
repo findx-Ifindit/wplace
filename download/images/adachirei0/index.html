@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画像 ダウンロード</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: ##ffd373;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-group {
+            margin-bottom: 20px;
+            text-align: center;
+            display: block;
+        }
+
+        .checkbox-item {
+            margin: 10px 0;
+            display: block;
+            align-items: center;
+        }
+
+        label {
+            margin-left: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #message {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .success-message {
+            color: green;
+        }
+        
+        .error-message {
+            color: red;
+        }
+
+        #preview-area {
+            margin-top: 20px;
+            border-top: 2px solid #ffd28a;
+            padding-top: 20px;
+            width:50%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        canvas {
+            border: 1px solid #ddd;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+        }
+
+        a{
+            color: #2d3e91;
+        }
+
+        /*darkmode*/
+        @media (prefers-color-scheme: dark) {
+            body{
+                background-color: #805700;
+            }
+
+            h1{
+                color: #aaa;
+            }
+
+            button{
+                color: white;
+                background-color: #004794;
+            }
+
+            button:hover {
+                background-color: #084485;
+            }
+
+            label{
+                color: white;
+            }
+
+            input[type="checkbox"] {
+                color: black;
+            }
+
+            p{
+                color: #454545;
+            }
+
+            h3{
+                color: white;
+            }
+
+            .zahyou{
+                color: #8a8a8a;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header><p>geminiを使用して作成</p><a href="/wplace/forms">問い合わせ・クレーム</a></header>
+    <div class="container">
+        <h1>画像 ダウンロード</h1>
+        <div class="checkbox-group">
+            <div class="checkbox-item">
+                <input type="checkbox" id="koukyo" name="image" value="皇居" checked disabled>
+                <label for="koukyo">皇居</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="kamo" name="image" value="カモ">
+                <label for="kamo">カモ</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="kokki" name="image" value="国旗">
+                <label for="kokki">国旗</label>
+            </div>
+        </div>
+        <button id="downloadButton">ダウンロード</button>
+        <p id="message"></p>
+        <div id="preview-area">
+            <canvas id="preview-canvas" width="16" height="16"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
+        const downloadButton = document.getElementById('downloadButton');
+        const messageElement = document.getElementById('message');
+        const previewArea = document.getElementById('preview-area');
+        const canvas = document.getElementById('preview-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // プレビュー表示関数
+        async function updatePreview() {
+            const selectedItems = [];
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedItems.push(checkbox.value);
+                }
+            });
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            previewArea.innerHTML = '';
+            
+            if (selectedItems.length > 0) {
+                const fileName = selectedItems.join(' ') + '.PNG';
+
+                try {
+                    const response = await fetch('files.json');
+                    if (!response.ok) {
+                        throw new Error('ファイルリストの取得に失敗しました。');
+                    }
+                    const availableFiles = await response.json();
+                    
+                    // ファイル名でオブジェクトを検索
+                    const fileData = availableFiles.find(file => file.fileName === fileName);
+
+                    if (fileData) {
+                        // 座標情報を表示に追加
+                        previewArea.innerHTML = `<h3>プレビュー: ${fileName}</h3><p class="zahyou">座標: (${fileData.coords.join(', ')})</p>`;
+                        
+                        const img = new Image();
+                        img.onload = () => {
+                            const originalWidth = img.width;
+                            const originalHeight = img.height;
+
+                            canvas.width = originalWidth;
+                            canvas.height = originalHeight;
+
+                            ctx.drawImage(img, 0, 0);
+
+                            const previewAreaSize = 200;
+                            const ratio = Math.min(previewAreaSize / originalWidth, previewAreaSize / originalHeight);
+
+                            canvas.style.width = `${originalWidth * ratio}px`;
+                            canvas.style.height = `${originalHeight * ratio}px`;
+
+                            previewArea.appendChild(canvas);
+                        };
+                        img.onerror = () => {
+                            previewArea.innerHTML = `<h3 class="error-message">プレビュー: 画像の読み込みに失敗しました</h3>`;
+                        };
+                        img.src = fileData.fileName; // fileDataからファイル名を取得
+                    } else {
+                        previewArea.innerHTML = `<h3 class="error-message">プレビュー: ファイルが見つかりません</h3>`;
+                    }
+                } catch (error) {
+                    console.error('エラーが発生しました:', error);
+                    previewArea.innerHTML = `<h3 class="error-message">プレビュー: ファイルリストの読み込みに失敗しました</h3>`;
+                }
+            }
+        }
+        
+        // ページ読み込み時に初期プレビューを設定
+        updatePreview();
+
+        // チェックボックスの状態が変更されたときにプレビューを更新
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updatePreview);
+        });
+
+        // ダウンロードボタンのクリックイベント
+        downloadButton.addEventListener('click', async function() {
+            const selectedItems = [];
+            messageElement.textContent = "";
+            messageElement.className = "";
+
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedItems.push(checkbox.value);
+                }
+            });
+
+            if (selectedItems.length === 0) {
+                messageElement.textContent = "どれか一つは選択してください。";
+                messageElement.className = "error-message";
+                return;
+            }
+
+            const fileName = selectedItems.join(' ') + '.PNG';
+
+            try {
+                const response = await fetch('files.json');
+                if (!response.ok) {
+                    throw new Error('ファイルリストの取得に失敗しました。');
+                }
+                const availableFiles = await response.json();
+                
+                // ファイル名でオブジェクトを検索
+                const fileData = availableFiles.find(file => file.fileName === fileName);
+
+                if (fileData) {
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = fileData.fileName; // fileDataからファイル名を取得
+                    downloadLink.download = fileData.fileName;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                } else {
+                    // alert("ファイルが存在しませんでした。");
+                    // window.location.href = "/wplace/forms";
+                    const messageBox = document.createElement('div');
+                    messageBox.textContent = "ファイルが存在しませんでした。";
+                    messageBox.style.cssText = `
+                        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                        background: white; padding: 20px; border: 1px solid #ccc; border-radius: 8px;
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000;
+                    `;
+                    document.body.appendChild(messageBox);
+                    setTimeout(() => {
+                        document.body.removeChild(messageBox);
+                    }, 3000);
+                }
+            } catch (error) {
+                // alert("エラーが発生しました: " + error.message);
+                const messageBox = document.createElement('div');
+                messageBox.textContent = "エラーが発生しました: " + error.message;
+                messageBox.style.cssText = `
+                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    background: white; padding: 20px; border: 1px solid #ccc; border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000;
+                `;
+                document.body.appendChild(messageBox);
+                setTimeout(() => {
+                    document.body.removeChild(messageBox);
+                }, 3000);
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
