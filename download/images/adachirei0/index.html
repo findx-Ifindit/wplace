@@ -11,7 +11,7 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            background-color: ##ffd373;
+            background-color: #f0f0f0;
             text-align: center;
         }
 
@@ -68,7 +68,7 @@
 
         #preview-area {
             margin-top: 20px;
-            border-top: 2px solid #ffd28a;
+            border-top: 2px solid #ccc;
             padding-top: 20px;
             width:50%;
             margin-left: auto;
@@ -89,7 +89,7 @@
         /*darkmode*/
         @media (prefers-color-scheme: dark) {
             body{
-                background-color: #805700;
+                background-color: #212121;
             }
 
             h1{
@@ -109,7 +109,7 @@
                 color: white;
             }
 
-            input[type="checkbox"] {
+            input[type="radio"] {
                 color: black;
             }
 
@@ -133,15 +133,15 @@
         <h1>画像 ダウンロード</h1>
         <div class="checkbox-group">
             <div class="checkbox-item">
-                <input type="checkbox" id="koukyo" name="image" value="皇居" checked disabled>
+                <input type="radio" id="koukyo" name="image" value="皇居">
                 <label for="koukyo">皇居</label>
             </div>
             <div class="checkbox-item">
-                <input type="checkbox" id="kamo" name="image" value="カモ">
+                <input type="radio" id="kamo" name="image" value="カモ">
                 <label for="kamo">カモ</label>
             </div>
             <div class="checkbox-item">
-                <input type="checkbox" id="kokki" name="image" value="国旗">
+                <input type="radio" id="kokki" name="image" value="国旗">
                 <label for="kokki">国旗</label>
             </div>
         </div>
@@ -153,28 +153,22 @@
     </div>
 
     <script>
-        const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
+        const radioButtons = document.querySelectorAll('.checkbox-group input[type="radio"]');
         const downloadButton = document.getElementById('downloadButton');
         const messageElement = document.getElementById('message');
         const previewArea = document.getElementById('preview-area');
         const canvas = document.getElementById('preview-canvas');
         const ctx = canvas.getContext('2d');
 
-        // プレビュー表示関数
         async function updatePreview() {
-            const selectedItems = [];
-            checkboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    selectedItems.push(checkbox.value);
-                }
-            });
+            const selectedRadio = document.querySelector('input[name="image"]:checked');
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             previewArea.innerHTML = '';
             
-            if (selectedItems.length > 0) {
-                const fileName = selectedItems.join(' ') + '.PNG';
-
+            if (selectedRadio) {
+                const selectedValue = selectedRadio.value;
+                
                 try {
                     const response = await fetch('files.json');
                     if (!response.ok) {
@@ -182,12 +176,11 @@
                     }
                     const availableFiles = await response.json();
                     
-                    // ファイル名でオブジェクトを検索
-                    const fileData = availableFiles.find(file => file.fileName === fileName);
+                    const fileData = availableFiles.find(file => file.file === selectedValue);
 
                     if (fileData) {
-                        // 座標情報を表示に追加
-                        previewArea.innerHTML = `<h3>プレビュー: ${fileName}</h3><p class="zahyou">座標: (${fileData.coords.join(', ')})</p>`;
+                        const fileName = fileData.filename[0];
+                        previewArea.innerHTML = `<h3>プレビュー: ${fileName}</h3>`;
                         
                         const img = new Image();
                         img.onload = () => {
@@ -210,7 +203,7 @@
                         img.onerror = () => {
                             previewArea.innerHTML = `<h3 class="error-message">プレビュー: 画像の読み込みに失敗しました</h3>`;
                         };
-                        img.src = fileData.fileName; // fileDataからファイル名を取得
+                        img.src = fileName;
                     } else {
                         previewArea.innerHTML = `<h3 class="error-message">プレビュー: ファイルが見つかりません</h3>`;
                     }
@@ -221,33 +214,22 @@
             }
         }
         
-        // ページ読み込み時に初期プレビューを設定
-        updatePreview();
-
-        // チェックボックスの状態が変更されたときにプレビューを更新
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', updatePreview);
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', updatePreview);
         });
 
-        // ダウンロードボタンのクリックイベント
         downloadButton.addEventListener('click', async function() {
-            const selectedItems = [];
+            const selectedRadio = document.querySelector('input[name="image"]:checked');
             messageElement.textContent = "";
             messageElement.className = "";
 
-            checkboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    selectedItems.push(checkbox.value);
-                }
-            });
-
-            if (selectedItems.length === 0) {
+            if (!selectedRadio) {
                 messageElement.textContent = "どれか一つは選択してください。";
                 messageElement.className = "error-message";
                 return;
             }
-
-            const fileName = selectedItems.join(' ') + '.PNG';
+            
+            const selectedValue = selectedRadio.value;
 
             try {
                 const response = await fetch('files.json');
@@ -256,19 +238,17 @@
                 }
                 const availableFiles = await response.json();
                 
-                // ファイル名でオブジェクトを検索
-                const fileData = availableFiles.find(file => file.fileName === fileName);
+                const fileData = availableFiles.find(file => file.file === selectedValue);
 
                 if (fileData) {
+                    const fileName = fileData.filename[0];
                     const downloadLink = document.createElement('a');
-                    downloadLink.href = fileData.fileName; // fileDataからファイル名を取得
-                    downloadLink.download = fileData.fileName;
+                    downloadLink.href = fileName;
+                    downloadLink.download = fileName;
                     document.body.appendChild(downloadLink);
                     downloadLink.click();
                     document.body.removeChild(downloadLink);
                 } else {
-                    // alert("ファイルが存在しませんでした。");
-                    // window.location.href = "/wplace/forms";
                     const messageBox = document.createElement('div');
                     messageBox.textContent = "ファイルが存在しませんでした。";
                     messageBox.style.cssText = `
@@ -282,7 +262,6 @@
                     }, 3000);
                 }
             } catch (error) {
-                // alert("エラーが発生しました: " + error.message);
                 const messageBox = document.createElement('div');
                 messageBox.textContent = "エラーが発生しました: " + error.message;
                 messageBox.style.cssText = `
