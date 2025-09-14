@@ -20,70 +20,10 @@
             margin-bottom: 20px;
         }
 
-        .checkbox-group {
+        .choicearea {
             margin-bottom: 20px;
             text-align: center;
             display: block;
-        }
-
-        .checkbox-item {
-            margin: 10px 0;
-            display: block;
-            align-items: center;
-        }
-
-        label {
-            margin-left: 10px;
-            font-size: 1.1em;
-            cursor: pointer;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 1em;
-            color: white;
-            background-color: #007BFF;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        #message {
-            margin-top: 15px;
-            font-weight: bold;
-        }
-
-        .success-message {
-            color: green;
-        }
-        
-        .error-message {
-            color: red;
-        }
-
-        #preview-area {
-            margin-top: 20px;
-            border-top: 2px solid #ccc;
-            padding-top: 20px;
-            width:50%;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        canvas {
-            border: 1px solid #ddd;
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: -webkit-optimize-contrast;
-        }
-
-        a{
-            color: #2d3e91;
         }
 
         /*darkmode*/
@@ -95,187 +35,25 @@
             h1{
                 color: #aaa;
             }
-
-            button{
-                color: white;
-                background-color: #004794;
-            }
-
-            button:hover {
-                background-color: #084485;
-            }
-
-            label{
-                color: white;
-            }
-
-            input[type="radio"] {
-                color: black;
-            }
-
+            
             p{
-                color: #454545;
+                color: #454545; /*悪気はないんです*/
             }
-
-            h3{
-                color: white;
-            }
-
-            .zahyou{
-                color: #8a8a8a;
-            }
-        }
     </style>
 </head>
 <body>
-    <header><p>geminiを使用して作成</p><a href="/wplace/forms">問い合わせ・クレーム</a></header>
+    <header><a href="/wplace/forms">問い合わせ・クレーム</a></header>
     <div class="container">
         <h1>画像 ダウンロード</h1>
-        <div class="checkbox-group">
-            <div class="checkbox-item">
-                <input type="radio" id="koukyo" name="image" value="皇居">
-                <label for="koukyo">皇居</label>
-            </div>
-            <div class="checkbox-item">
-                <input type="radio" id="kamo" name="image" value="カモ">
-                <label for="kamo">カモ</label>
-            </div>
-            <div class="checkbox-item">
-                <input type="radio" id="kokki" name="image" value="国旗">
-                <label for="kokki">国旗</label>
-            </div>
-        </div>
-        <button id="downloadButton">ダウンロード</button>
-        <p id="message"></p>
-        <div id="preview-area">
-            <canvas id="preview-canvas" width="16" height="16"></canvas>
+        <div class="choicearea">
+            <a href="1819-805-144-624.png" download><img src="1819-805-144-624.png"></a>
+            <a href="1819-805-156-735.png" download><img src="1819-805-156-735.png"></a>
+            <a href="1819-805-169-433.png" download><img src="1819-805-169-433.png"></a>
+            <a href="1819-805-199-584.png" download><img src="1819-805-199-584.png"></a>
+            <a href="1819-805-226-601.png" download><img src="1819-805-226-601.png"></a>
+            <a href="1819-805-351-707.png" download><img src="1819-805-351-707.png"></a>
+            <a href="1819-805-92-749.png" download><img src="1819-805-92-749.png"></a>
         </div>
     </div>
-
-    <script>
-        const radioButtons = document.querySelectorAll('.checkbox-group input[type="radio"]');
-        const downloadButton = document.getElementById('downloadButton');
-        const messageElement = document.getElementById('message');
-        const previewArea = document.getElementById('preview-area');
-        const canvas = document.getElementById('preview-canvas');
-        const ctx = canvas.getContext('2d');
-
-        async function updatePreview() {
-            const selectedRadio = document.querySelector('input[name="image"]:checked');
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            previewArea.innerHTML = '';
-            
-            if (selectedRadio) {
-                const selectedValue = selectedRadio.value;
-                
-                try {
-                    const response = await fetch('files.json');
-                    if (!response.ok) {
-                        throw new Error('ファイルリストの取得に失敗しました。');
-                    }
-                    const availableFiles = await response.json();
-                    
-                    const fileData = availableFiles.find(file => file.file === selectedValue);
-
-                    if (fileData) {
-                        const fileName = fileData.filename[0];
-                        previewArea.innerHTML = `<h3>プレビュー: ${fileName}</h3>`;
-                        
-                        const img = new Image();
-                        img.onload = () => {
-                            const originalWidth = img.width;
-                            const originalHeight = img.height;
-
-                            canvas.width = originalWidth;
-                            canvas.height = originalHeight;
-
-                            ctx.drawImage(img, 0, 0);
-
-                            const previewAreaSize = 200;
-                            const ratio = Math.min(previewAreaSize / originalWidth, previewAreaSize / originalHeight);
-
-                            canvas.style.width = `${originalWidth * ratio}px`;
-                            canvas.style.height = `${originalHeight * ratio}px`;
-
-                            previewArea.appendChild(canvas);
-                        };
-                        img.onerror = () => {
-                            previewArea.innerHTML = `<h3 class="error-message">プレビュー: 画像の読み込みに失敗しました</h3>`;
-                        };
-                        img.src = fileName;
-                    } else {
-                        previewArea.innerHTML = `<h3 class="error-message">プレビュー: ファイルが見つかりません</h3>`;
-                    }
-                } catch (error) {
-                    console.error('エラーが発生しました:', error);
-                    previewArea.innerHTML = `<h3 class="error-message">プレビュー: ファイルリストの読み込みに失敗しました</h3>`;
-                }
-            }
-        }
-        
-        radioButtons.forEach(radio => {
-            radio.addEventListener('change', updatePreview);
-        });
-
-        downloadButton.addEventListener('click', async function() {
-            const selectedRadio = document.querySelector('input[name="image"]:checked');
-            messageElement.textContent = "";
-            messageElement.className = "";
-
-            if (!selectedRadio) {
-                messageElement.textContent = "どれか一つは選択してください。";
-                messageElement.className = "error-message";
-                return;
-            }
-            
-            const selectedValue = selectedRadio.value;
-
-            try {
-                const response = await fetch('files.json');
-                if (!response.ok) {
-                    throw new Error('ファイルリストの取得に失敗しました。');
-                }
-                const availableFiles = await response.json();
-                
-                const fileData = availableFiles.find(file => file.file === selectedValue);
-
-                if (fileData) {
-                    const fileName = fileData.filename[0];
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = fileName;
-                    downloadLink.download = fileName;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
-                } else {
-                    const messageBox = document.createElement('div');
-                    messageBox.textContent = "ファイルが存在しませんでした。";
-                    messageBox.style.cssText = `
-                        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                        background: white; padding: 20px; border: 1px solid #ccc; border-radius: 8px;
-                        box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000;
-                    `;
-                    document.body.appendChild(messageBox);
-                    setTimeout(() => {
-                        document.body.removeChild(messageBox);
-                    }, 3000);
-                }
-            } catch (error) {
-                const messageBox = document.createElement('div');
-                messageBox.textContent = "エラーが発生しました: " + error.message;
-                messageBox.style.cssText = `
-                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                    background: white; padding: 20px; border: 1px solid #ccc; border-radius: 8px;
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000;
-                `;
-                document.body.appendChild(messageBox);
-                setTimeout(() => {
-                    document.body.removeChild(messageBox);
-                }, 3000);
-                console.error(error);
-            }
-        });
-    </script>
 </body>
 </html>
